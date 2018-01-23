@@ -10,7 +10,7 @@ module Lograge
         return {} unless sql_queries
 
         Thread.current[:lograge_sql_queries] = nil
-        { sql_queries: %('#{sql_queries.join("\n")}') }
+        { sql_queries: sql_queries.inspect }
       end
     end
   end
