@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'lograge/sql/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'lograge-sql'
+  spec.name          = 'lograge-sql-one-line'
   spec.version       = Lograge::Sql::VERSION
   spec.authors       = ['Mattia Giuffrida']
   spec.email         = ['giuffrida.mattia@gmail.com']
