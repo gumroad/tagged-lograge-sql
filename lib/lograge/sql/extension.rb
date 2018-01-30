@@ -2,18 +2,26 @@ module Lograge
   module Sql
     module Extension
       def extract_request(event, payload)
-        super.merge!(extract_sql_queries)
+        super.merge!(extract_sql_queries(payload[:uuid]))
       end
 
-      def extract_sql_queries
+      def extract_sql_queries(uuid)
         sql_queries = Thread.current[:lograge_sql_queries]
-        transaction_id = Thread.current[:transaction_id]
-
         return {} unless sql_queries
 
-        Thread.current[:transaction_id]      = nil
         Thread.current[:lograge_sql_queries] = nil
-        { transaction_id: transaction_id, sql_queries: sql_queries.join }
+
+        formatted_queries = if uuid
+          queries_with_uuid = sql_queries.map do |query|
+            "\n[#{uuid}] #{query}"
+          end
+
+          queries_with_uuid.join
+        else
+          sql_queries.join("\n")
+        end
+
+        { sql_queries: formatted_queries }
       end
     end
   end
@@ -25,9 +33,7 @@ module Lograge
       ActiveRecord::LogSubscriber.runtime += event.duration
       return if event.payload[:name] == 'SCHEMA'
       Thread.current[:lograge_sql_queries] ||= []
-      Thread.current[:lograge_sql_queries] << ("\n[#{event.transaction_id}] #{event.payload[:name]} (#{event.duration.to_f.round(2)}) #{event.payload[:sql]}")
-
-      Thread.current[:transaction_id] ||= event.transaction_id
+      Thread.current[:lograge_sql_queries] << ("#{event.payload[:name]} (#{event.duration.to_f.round(2)}) #{event.payload[:sql]}")
     end
   end
 end
