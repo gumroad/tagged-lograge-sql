@@ -7,10 +7,13 @@ module Lograge
 
       def extract_sql_queries
         sql_queries = Thread.current[:lograge_sql_queries]
+        transaction_id = Thread.current[:transaction_id]
+
         return {} unless sql_queries
 
+        Thread.current[:transaction_id]      = nil
         Thread.current[:lograge_sql_queries] = nil
-        { sql_queries: sql_queries.inspect }
+        { transaction_id: transaction_id, sql_queries: sql_queries.join }
       end
     end
   end
@@ -22,7 +25,9 @@ module Lograge
       ActiveRecord::LogSubscriber.runtime += event.duration
       return if event.payload[:name] == 'SCHEMA'
       Thread.current[:lograge_sql_queries] ||= []
-      Thread.current[:lograge_sql_queries] << ("#{event.payload[:name]} (#{event.duration.to_f.round(2)}) #{event.payload[:sql]}")
+      Thread.current[:lograge_sql_queries] << ("\n[#{event.transaction_id}] #{event.payload[:name]} (#{event.duration.to_f.round(2)}) #{event.payload[:sql]}")
+
+      Thread.current[:transaction_id] ||= event.transaction_id
     end
   end
 end
