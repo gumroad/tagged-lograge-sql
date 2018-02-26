@@ -2,12 +2,13 @@ module Lograge
   module Sql
     module Extension
       def extract_request(event, payload)
-        super.merge!(extract_sql_queries(payload[:uuid]))
+        super.merge!(extract_sql_queries(payload[:uuid], payload[:log_sql]))
       end
 
-      def extract_sql_queries(uuid)
+      def extract_sql_queries(uuid, log_sql)
         sql_queries = Thread.current[:lograge_sql_queries]
         return {} unless sql_queries
+        return {} unless log_sql
 
         Thread.current[:lograge_sql_queries] = nil
 
