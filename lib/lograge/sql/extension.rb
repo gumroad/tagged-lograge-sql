@@ -7,10 +7,10 @@ module Lograge
 
       def extract_sql_queries(uuid, log_sql)
         sql_queries = Thread.current[:lograge_sql_queries]
+        Thread.current[:lograge_sql_queries] = nil
         return {} unless sql_queries
         return {} unless log_sql
 
-        Thread.current[:lograge_sql_queries] = nil
 
         formatted_queries = if uuid
           queries_with_uuid = sql_queries.map do |query|
